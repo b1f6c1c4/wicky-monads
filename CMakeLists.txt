@@ -3,5 +3,5 @@ project(util C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(wic wic.c)
-add_executable(monad monad.c)
+add_executable(wic wic.c common.c)
+add_executable(monad monad.c common.c)
