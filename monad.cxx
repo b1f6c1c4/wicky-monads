@@ -41,10 +41,26 @@ double sec(timespec t) {
     return static_cast<double>(t.tv_sec) + static_cast<double>(t.tv_nsec) * 1e-9;
 }
 
+void analysis(json &j) {
+    if (j.contains("error"))
+        j["status"] = "errored";
+    else if (!j.contains("return"))
+        j["status"] = "cancelled";
+    else if (j.contains("timeout"))
+        j["status"] = "timeout";
+    else if (j.contains("signal"))
+        j["status"] = "killed";
+    else if (j["return"].get<int>())
+        j["status"] = "failed";
+    else
+        j["status"] = "success";
+}
+
 int main(int argc, char *argv[]) {
     cli_t cli;
     parse_cli(&cli, argc, argv,
-              "Usage: monad [-t <time-limit>] [-m <mem-limit>] [--merge] [-v]\n"
+              "Usage: monad [-t <time-limit>] [-m <mem-limit>] [-M|--merge]\n"
+              "             [-p|--partial] [-P|--panic] [-v]\n"
               "             -o <output> <input>... -- <executable> <arg>...\n"
               "    Run <executable> with <arg>... <input>...\n"
               "    Info from <input>.monad... will be read and failed ones will be skipped.\n"
@@ -66,6 +82,11 @@ int main(int argc, char *argv[]) {
     bool maybe_good = true;
     json j{ { "good", false } };
 
+    int fd;
+    int status;
+    bool to;
+    decltype(std::chrono::high_resolution_clock::now()) start;
+
     try {
         std::vector<const char *> args;
         args.emplace_back(cli.executable);
@@ -80,19 +101,39 @@ int main(int argc, char *argv[]) {
         j["parsing"]["executable"] = cli.executable;
 
         j["error"]["stage"] = "input";
-        for (size_t i{}, g{}; i < cli.n_inputs; i++) {
+        auto any_good = false;
+        auto any_bad = false;
+        for (size_t i{}; i < cli.n_inputs; i++) {
             std::ifstream ifst{ std::string{ cli.inputs[i] } + ".monad" };
             json st;
             ifst >> st;
             ifst.close();
             if (st["good"].get<bool>()) {
-                auto &jj = j["inputs"][g++];
-                jj["name"] = cli.inputs[i];
-                jj["status"] = std::move(st);
+                any_good = true;
                 args.emplace_back(cli.inputs[i]);
+            } else {
+                any_bad = true;
             }
+            auto &jj = j["inputs"][i];
+            jj["name"] = cli.inputs[i];
+            jj["status"] = std::move(st);
         }
         args.emplace_back(nullptr);
+        if (!(cli.n_inputs == 0
+            || cli.partial && any_good
+            || !cli.partial && !any_bad)) {
+            maybe_good = false;
+            if (!cli.panic) {
+                j["error"]["stage"] = "cancelled-open";
+                fd = open(cli.output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                if (fd == -1)
+                    throw std::runtime_error{ "Cannot open: "s + std::strerror(errno) };
+                j["error"]["stage"] = "close";
+                if (close(fd) == -1)
+                    throw std::runtime_error{ "Cannot close: "s + std::strerror(errno) };
+            }
+            goto cancelled;
+        }
 
         j["error"]["stage"] = "dump-args";
         for (auto a : args)
@@ -102,7 +143,7 @@ int main(int argc, char *argv[]) {
                 j["parsing"]["args"].emplace_back(nullptr);
 
         j["error"]["stage"] = "open";
-        int fd = open(cli.output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        fd = open(cli.output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd == -1)
             throw std::runtime_error{ "Cannot open: "s + std::strerror(errno) };
         j["error"]["stage"] = "dup2";
@@ -113,7 +154,7 @@ int main(int argc, char *argv[]) {
             throw std::runtime_error{ "Cannot close: "s + std::strerror(errno) };
 
         j["error"]["stage"] = "timing-start";
-        auto start = std::chrono::high_resolution_clock::now();
+        start = std::chrono::high_resolution_clock::now();
 
         j["error"]["stage"] = "sig";
         signal(SIGHUP, &trap);
@@ -151,11 +192,10 @@ int main(int argc, char *argv[]) {
                 throw std::runtime_error{ "Cannot timer_settime: "s + std::strerror(errno) };
         }
 
-        int status;
         j["error"]["stage"] = "waitpid";
         if (waitpid(child, &status, WUNTRACED) == -1)
             throw std::runtime_error{ "Cannot waitpid: "s + std::strerror(errno) };
-        bool to = timeout;
+        to = timeout;
 
         {
             j["error"]["stage"] = "timing-stop";
@@ -209,14 +249,20 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        cancelled:
         j["error"]["stage"] = "write-output";
         std::ofstream ofs{ fst };
         if (!ofs.good())
             throw std::runtime_error{ "Not good" };
-        j.erase("error");
         j["good"] = maybe_good;
+        j.erase("error");
+        analysis(j);
         if (!cli.verbose) j.erase("parsing");
         ofs << j;
+        if (cli.panic && !maybe_good) {
+            unlink(cli.output);
+            return 1;
+        }
         return 0;
     } catch (const std::exception &e) {
         j["error"]["what"] = e.what();
@@ -229,6 +275,7 @@ int main(int argc, char *argv[]) {
     unlink(cli.output);
     std::cerr << "Error during " << j["error"]["stage"] << ": " << j["error"] << "\n";
     std::ofstream ofst{ fst };
+    analysis(j);
     if (ofst.good()) {
         ofst << j;
         std::cerr << "Notice: Log has been written to " << fst << "\n";

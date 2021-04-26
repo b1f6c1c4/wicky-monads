@@ -65,6 +65,8 @@ void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help) {
     res->n_inputs = 0;
     res->inputs = calloc(argc, sizeof(const char *));
     res->verbose = false;
+    res->partial = false;
+    res->panic = false;
     for (argc--, argv++; argc; argc--, argv++) {
         if (argv[0][0] != '-') {
             res->inputs[res->n_inputs++] = argv[0];
@@ -75,11 +77,28 @@ void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help) {
             res->merge_output = true;
             continue;
         }
+        if (strcmp(argv[0], "--partial") == 0) {
+            res->partial = true;
+            continue;
+        }
+        if (strcmp(argv[0], "--panic") == 0) {
+            res->panic = true;
+            continue;
+        }
         if (argv[0][1] == '\0' || argv[0][2] != '\0')
             exit(125);
         switch (argv[0][1]) {
+            case 'M':
+                res->merge_output = true;
+                continue;
             case 'v':
                 res->verbose = true;
+                continue;
+            case 'p':
+                res->partial = true;
+                continue;
+            case 'P':
+                res->panic = true;
                 continue;
             case 'h':
             help:

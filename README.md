@@ -9,7 +9,7 @@
     ```bash
     wic -o ./foo.inc -- ./codegen
     ```
-  
+
     - Using `wic` together with `ninja`'s `restat` can significantly reduce
       the amount of re-bulids when any sort of code generation is present.
 
@@ -29,16 +29,16 @@
     ```bash
     monad -t 1:00 -o ./rpt2 -- ./test2
     ```
-  
+
     - `monad(1)` is better than `timeout(1)` because the latter doesn't have
       a chance to save the execution detail (e.g. memory used before killing.)
 
 - Run `wc -l` on `./rpt1` and/or `./rpt2` (whichever succeeded,) write everything to `./final.json`:
 
     ```bash
-    monad --merge -o ./final.json ./rpt1 ./rpt2 -- wc -l
+    monad --merge -o ./final.json --partial ./rpt1 ./rpt2 -- wc -l
     ```
-  
+
     - `monad(1)` here will be very helpful if you want to gather all the
       results together, whether succeeded or failed, into a big file for
       data visualization.
@@ -54,5 +54,7 @@ wic -o <output> -- <executable> <arg>...
 ### `monad(1)`: Monoid in the Category of Endofunctors
 
 ```bash
-monad [-t <time-time_limit>] [-m <mem-time_limit>] [--merge] -o <output> <input>... -- <executable> <arg>...
+monad [-t <time-time_limit>] [-m <mem-time_limit>] [-M|--merge]
+      [-p|--partial] [-P|--panic] [-v]
+      -o <output> <input>... -- <executable> <arg>...
 ```

@@ -25,6 +25,8 @@ struct cli_t {
     size_t n_args;
     const char **args;
     bool verbose;
+    bool partial;
+    bool panic;
 };
 
 void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help);
