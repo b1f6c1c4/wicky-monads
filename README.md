@@ -48,13 +48,25 @@
 ### `wic(1)`: Write-If-Changed
 
 ```bash
-wic -o <output> -- <executable> <arg>...
+Usage: wic -o <output> -- <executable> <args>...
+    Run the <executable> with <args>..., redirect its output to <output> if
+    and only if their content differs.
 ```
 
 ### `monad(1)`: Monoid in the Category of Endofunctors
 
 ```bash
-monad [-t <time-time_limit>] [-m <mem-time_limit>] [-M|--merge]
-      [-p|--partial] [-P|--panic] [-v]
-      -o <output> <input>... -- <executable> <arg>...
+Usage: monad [-t <time-limit>] [-m <mem-limit>] [-M|--merge]
+             [-p|--partial] [-P|--panic] [-v]
+             -o <output> <input>... -- <executable> <arg>...
+    Run <executable> with <arg>... <input>... and redirect stdout to <output>
+    Info from <input>.monad... will be read and (with --partial) failed ones
+    will be skipped, or (no --partial) any faulty input will cancel the run.
+    If the <executable> timeout/failed, <output>.monad will record the case.
+    If the <executable> succeed, <output>.monad will record duration and mem.
+    If --merge is specified, <output> itself will store such info instead.
+    If --panic is given, successful run will return 0, failed/cancelled will
+    return 1, errored will return 2. If --panic is not given, it will always
+    return 0 unless errored. <output> will be created/removed according to the
+    return value of monad (0 = always exist, 1/2 = always removed).
 ```

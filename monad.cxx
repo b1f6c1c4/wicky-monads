@@ -62,12 +62,16 @@ int main(int argc, char *argv[]) {
               "Usage: monad [-t <time-limit>] [-m <mem-limit>] [-M|--merge]\n"
               "             [-p|--partial] [-P|--panic] [-v]\n"
               "             -o <output> <input>... -- <executable> <arg>...\n"
-              "    Run <executable> with <arg>... <input>...\n"
-              "    Info from <input>.monad... will be read and failed ones will be skipped.\n"
-              "    If the <executable> timeout/failed, <output>.monad will record the failure.\n"
+              "    Run <executable> with <arg>... <input>... and redirect stdout to <output>\n"
+              "    Info from <input>.monad... will be read and (with --partial) failed ones\n"
+              "    will be skipped, or (no --partial) any faulty input will cancel the run.\n"
+              "    If the <executable> timeout/failed, <output>.monad will record the case.\n"
               "    If the <executable> succeed, <output>.monad will record duration and mem.\n"
               "    If --merge is specified, <output> itself will store such info instead.\n"
-              "    In no case shall monad exit with a non-zero due to error from <output>.\n");
+              "    If --panic is given, successful run will return 0, failed/cancelled will\n"
+              "    return 1, errored will return 2. If --panic is not given, it will always\n"
+              "    return 0 unless errored. <output> will be created/removed according to the\n"
+              "    return value of monad (0 = always exist, 1/2 = always removed).\n");
 
     auto fst = cli.output + (cli.merge_output ? ""s : ".monad"s);
     try {
@@ -282,5 +286,5 @@ int main(int argc, char *argv[]) {
     } else {
         std::cerr << "Fatal: Still not good, showing the log:\n" << std::setw(2) << j;
     }
-    return 11;
+    return 2;
 }
