@@ -27,6 +27,8 @@ struct cli_t {
     bool verbose;
     bool partial;
     bool panic;
+    size_t n_defs;
+    const char **defs;
 };
 
 void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help);

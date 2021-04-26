@@ -104,23 +104,41 @@ int main(int argc, char *argv[]) {
         j["parsing"]["monad-output"] = fst;
         j["parsing"]["executable"] = cli.executable;
 
+        j["error"]["stage"] = "defs";
+        for (size_t i{}; i < cli.n_defs; i++) {
+            std::string_view sv{ cli.defs[i] };
+            auto id = sv.find('=');
+            if (id == std::string_view::npos) {
+                j[cli.defs[i]] = nullptr;
+                continue;
+            }
+            j[std::string{ sv.substr(0, id) }] = cli.defs[i] + id + 1;
+        }
+
         j["error"]["stage"] = "input";
         auto any_good = false;
         auto any_bad = false;
         for (size_t i{}; i < cli.n_inputs; i++) {
+            auto &jj = j["inputs"][i];
+            jj["name"] = cli.inputs[i];
             std::ifstream ifst{ std::string{ cli.inputs[i] } + ".monad" };
-            json st;
-            ifst >> st;
-            ifst.close();
-            if (st["good"].get<bool>()) {
+            bool good;
+            if (ifst.good()) {
+                json st;
+                ifst >> st;
+                ifst.close();
+                good = st["good"].get<bool>();
+                jj["status"] = std::move(st);
+            } else {
+                std::ifstream ifs{ cli.inputs[i] };
+                good = ifs.good();
+            }
+            if (good) {
                 any_good = true;
                 args.emplace_back(cli.inputs[i]);
             } else {
                 any_bad = true;
             }
-            auto &jj = j["inputs"][i];
-            jj["name"] = cli.inputs[i];
-            jj["status"] = std::move(st);
         }
         args.emplace_back(nullptr);
         if (!(cli.n_inputs == 0
@@ -262,7 +280,7 @@ int main(int argc, char *argv[]) {
         j.erase("error");
         analysis(j);
         if (!cli.verbose) j.erase("parsing");
-        ofs << j;
+        ofs << j << "\n";
         if (cli.panic && !maybe_good) {
             unlink(cli.output);
             return 1;
@@ -281,7 +299,7 @@ int main(int argc, char *argv[]) {
     std::ofstream ofst{ fst };
     analysis(j);
     if (ofst.good()) {
-        ofst << j;
+        ofst << j << "\n";
         std::cerr << "Notice: Log has been written to " << fst << "\n";
     } else {
         std::cerr << "Fatal: Still not good, showing the log:\n" << std::setw(2) << j;

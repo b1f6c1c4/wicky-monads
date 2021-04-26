@@ -24,6 +24,8 @@ int main(int argc, char *argv[]) {
     if (cli.merge_output) exit(125);
     if (cli.time_limit.tv_sec || cli.time_limit.tv_nsec) exit(125);
     if (cli.mem_limit) exit(125);
+    if (cli.n_defs) exit(125);
+    if (cli.partial || cli.panic) exit(125);
     if (access(cli.output, R_OK | W_OK) == -1) {
         int fd = open(cli.output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd == -1) return 123;

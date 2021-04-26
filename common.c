@@ -64,12 +64,18 @@ void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help) {
     res->output = NULL;
     res->n_inputs = 0;
     res->inputs = calloc(argc, sizeof(const char *));
+    res->n_defs = 0;
+    res->defs = calloc(argc, sizeof(const char *));
     res->verbose = false;
     res->partial = false;
     res->panic = false;
     for (argc--, argv++; argc; argc--, argv++) {
         if (argv[0][0] != '-') {
             res->inputs[res->n_inputs++] = argv[0];
+            continue;
+        }
+        if (argv[0][1] == 'D') {
+            res->defs[res->n_defs++] = argv[0] + 2;
             continue;
         }
         if (strcmp(argv[0], "--help") == 0) goto help;
