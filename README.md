@@ -47,7 +47,7 @@
 
 ### `wic(1)`: Write-If-Changed
 
-```bash
+```
 Usage: wic -o <output> -- <executable> <args>...
     Run the <executable> with <args>..., redirect its output to <output> if
     and only if their content differs.
@@ -55,7 +55,7 @@ Usage: wic -o <output> -- <executable> <args>...
 
 ### `monad(1)`: Monoid in the Category of Endofunctors
 
-```bash
+```
 Usage: monad [-t <time-limit>] [-m <mem-limit>] [-M|--merge]
              [-p|--partial] [-P|--panic] [-v]
              -o <output> <input>... -- <executable> <arg>...
@@ -70,3 +70,11 @@ Usage: monad [-t <time-limit>] [-m <mem-limit>] [-M|--merge]
     return 0 unless errored. <output> will be created/removed according to the
     return value of monad (0 = always exist, 1/2 = always removed).
 ```
+
+## Install
+
+Use CMake.
+
+## License
+
+MIT
