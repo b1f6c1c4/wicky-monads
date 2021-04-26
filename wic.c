@@ -11,6 +11,7 @@
 pid_t child;
 
 void trap(int sig) {
+    if (!child) return;
     kill(child, sig);
 }
 
@@ -20,7 +21,9 @@ int main(int argc, char *argv[]) {
               "Usage: wic -o <output> -- <executable> <args>...\n"
               "    Run the <executable> with <args>..., redirect its output to <output> if\n"
               "    and only if their content differs.\n");
-    if (cli.limit) exit(125);
+    if (cli.merge_output) exit(125);
+    if (cli.time_limit.tv_sec || cli.time_limit.tv_nsec) exit(125);
+    if (cli.mem_limit) exit(125);
     if (access(cli.output, R_OK | W_OK) == -1) {
         int fd = open(cli.output, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd == -1) return 123;
@@ -32,15 +35,6 @@ int main(int argc, char *argv[]) {
     int fds[2];
     if (pipe(fds) == -1)
         return 126;
-    if ((child = fork()) == -1) return 128;
-    if (!child) {
-        while ((dup2(fds[1], STDOUT_FILENO) == -1) && (errno == EINTR));
-        close(fds[1]);
-        close(fds[0]);
-        execvp(cli.executable, (char * const *)cli.args);
-        return 127;
-    }
-    close(fds[1]);
 
     signal(SIGHUP, &trap);
     signal(SIGINT, &trap);
@@ -50,6 +44,15 @@ int main(int argc, char *argv[]) {
     signal(SIGTERM, &trap);
     signal(SIGUSR1, &trap);
     signal(SIGUSR2, &trap);
+    if ((child = fork()) == -1) return 128;
+    if (!child) {
+        while ((dup2(fds[1], STDOUT_FILENO) == -1) && (errno == EINTR));
+        close(fds[1]);
+        close(fds[0]);
+        execvp(cli.executable, (char * const *)cli.args);
+        return 127;
+    }
+    close(fds[1]);
 
     int fd = open(cli.output, O_RDWR);
     if (fd == -1) {

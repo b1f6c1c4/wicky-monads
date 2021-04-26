@@ -36,7 +36,7 @@
 - Run `wc -l` on `./rpt1` and/or `./rpt2` (whichever succeeded,) write everything to `./final.json`:
 
     ```bash
-    monad -o M:./final.json ./rpt1 ./rpt2 -- wc -l
+    monad --merge -o ./final.json ./rpt1 ./rpt2 -- wc -l
     ```
   
     - `monad(1)` here will be very helpful if you want to gather all the
@@ -54,5 +54,5 @@ wic -o <output> -- <executable> <arg>...
 ### `monad(1)`: Monoid in the Category of Endofunctors
 
 ```bash
-monad [-t <limit>] -o <output> <input>... -- <executable> <arg>...
+monad [-t <time-time_limit>] [-m <mem-time_limit>] [--merge] -o <output> <input>... -- <executable> <arg>...
 ```
