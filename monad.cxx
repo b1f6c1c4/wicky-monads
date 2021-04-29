@@ -93,7 +93,6 @@ int main(int argc, char *argv[]) {
 
     try {
         std::vector<const char *> args;
-        args.emplace_back(cli.executable);
         for (size_t i{}; i < cli.n_args; i++)
             args.emplace_back(cli.args[i]);
 

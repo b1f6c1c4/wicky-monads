@@ -133,6 +133,6 @@ void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help) {
     res->executable = argv[0];
     if (!res->executable || !res->output)
         exit(125);
-    res->n_args = --argc;
-    res->args = (const char **)++argv;
+    res->n_args = argc;
+    res->args = (const char **)argv;
 }

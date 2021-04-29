@@ -22,8 +22,8 @@ struct cli_t {
     size_t n_inputs;
     const char **inputs;
     const char *executable;
-    size_t n_args;
-    const char **args;
+    size_t n_args; // includes args[0]
+    const char **args; // args[0] == executable
     bool verbose;
     bool partial;
     bool panic;
