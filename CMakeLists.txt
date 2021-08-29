@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
-project(util)
+project(wicky-monads VERSION 0.1)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
+
+configure_file(config.h.in config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 include(FetchContent)
 

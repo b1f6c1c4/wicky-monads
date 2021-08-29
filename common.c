@@ -79,6 +79,7 @@ void parse_cli(struct cli_t *res, int argc, char *argv[], const char *help) {
             continue;
         }
         if (strcmp(argv[0], "--help") == 0) goto help;
+        if (strcmp(argv[0], "--version") == 0) goto help;
         if (strcmp(argv[0], "--merge") == 0) {
             res->merge_output = true;
             continue;

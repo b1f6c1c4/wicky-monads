@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "common.h"
+#include "config.h"
 
 using json = nlohmann::json;
 using namespace std::string_literals;
@@ -59,6 +60,7 @@ void analysis(json &j) {
 int main(int argc, char *argv[]) {
     cli_t cli;
     parse_cli(&cli, argc, argv,
+              "monad(1) from wicky-monads " PROJECT_VERSION "\n\n"
               "Usage: monad [-t <time-limit>] [-m <mem-limit>] [-M|--merge]\n"
               "             [-p|--partial] [-P|--panic] [-v]\n"
               "             -o <output> <input>... -- <executable> <arg>...\n"

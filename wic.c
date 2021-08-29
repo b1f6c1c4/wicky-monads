@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "common.h"
+#include "config.h"
 
 pid_t child;
 
@@ -18,6 +19,7 @@ void trap(int sig) {
 int main(int argc, char *argv[]) {
     struct cli_t cli;
     parse_cli(&cli, argc, argv,
+              "wic(1) from wicky-monads " PROJECT_VERSION "\n\n"
               "Usage: wic -o <output> -- <executable> <args>...\n"
               "    Run the <executable> with <args>..., redirect its output to <output> if\n"
               "    and only if their content differs.\n");
