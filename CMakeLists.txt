@@ -23,3 +23,6 @@ add_executable(wic wic.c common.c)
 add_executable(monad monad.cxx common.c)
 target_link_libraries(monad nlohmann_json::nlohmann_json)
 target_link_libraries(monad rt)
+
+install(TARGETS wic DESTINATION bin)
+install(TARGETS monad DESTINATION bin)
