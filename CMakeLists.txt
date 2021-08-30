@@ -24,5 +24,25 @@ add_executable(monad monad.cxx common.c)
 target_link_libraries(monad nlohmann_json::nlohmann_json)
 target_link_libraries(monad rt)
 
+if(NOT EXISTS ${PANDOC_EXECUTABLE})
+    find_program(PANDOC_EXECUTABLE pandoc)
+    mark_as_advanced(PANDOC_EXECUTABLE)
+    if(NOT EXISTS ${PANDOC_EXECUTABLE})
+        message(FATAL_ERROR "Pandoc not found. Install Pandoc or set cache variable PANDOC_EXECUTABLE.")
+    endif()
+endif()
+add_custom_command(OUTPUT wic.1
+        COMMAND pandoc ARGS -s -t man -o wic.1 ${CMAKE_CURRENT_SOURCE_DIR}/man/wic.md
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/wic.md
+        COMMENT "Using pandoc to generate man page: wic.1")
+add_custom_command(OUTPUT monad.1
+        COMMAND pandoc ARGS -s -t man -o monad.1 ${CMAKE_CURRENT_SOURCE_DIR}/man/monad.md
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/man/monad.md
+        COMMENT "Using pandoc to generate man page: monad.1")
+add_custom_target(manual DEPENDS wic.1 monad.1)
+
 install(TARGETS wic DESTINATION bin)
 install(TARGETS monad DESTINATION bin)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/wic.1 DESTINATION share/man/)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/monad.1 DESTINATION share/man/)
+install(FILES LICENSE DESTINATION share/licenses/wicky-monads/)

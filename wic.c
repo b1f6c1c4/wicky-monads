@@ -69,13 +69,13 @@ int main(int argc, char *argv[]) {
     while (true) {
         ssize_t cnta = read(fds[0], bufa, sizeof(bufa));
         if (cnta == -1 && errno == EINTR) continue;
-        if (cnta == -1) return 125;
+        if (cnta == -1) return 121;
         if (!cnta) break;
         if (!flag)
             for (size_t o = 0; o < cnta;) {
                 ssize_t cntb = read(fd, bufb, cnta - o);
                 if (cntb == -1 && errno == EINTR) continue;
-                if (cntb == -1) return 125;
+                if (cntb == -1) return 121;
                 if (!cntb) { flag = true; break; }
                 if (memcmp(bufa + o, bufb, cntb) != 0) {
                     flag = true;
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     int status;
     if (waitpid(child, &status, WUNTRACED) == -1) {
         unlink(cli.output);
-        return 126;
+        return 120;
     }
 
     if (WIFSIGNALED(status)) {
